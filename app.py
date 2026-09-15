@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS để làm đẹp giao diện giống thiết kế chuyên nghiệp
+# Custom CSS làm đẹp giao diện
 st.markdown("""
     <style>
     .main-header {
@@ -29,7 +29,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Khởi tạo dữ liệu mẫu trong session_state
+# Khởi tạo dữ liệu mẫu chuẩn an toàn
 if "documents" not in st.session_state:
     st.session_state["documents"] = [
         {
@@ -74,7 +74,7 @@ if "documents" not in st.session_state:
     ]
 
 if "current_view" not in st.session_state:
-    st.session_state["current_view"] = "dashboard" # dashboard, detail, scan, settings
+    st.session_state["current_view"] = "dashboard"
 
 if "selected_doc_id" not in st.session_state:
     st.session_state["selected_doc_id"] = "DOC-01"
@@ -87,7 +87,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Các nút điều hướng nhanh trên header
 col_h1, col_h2, col_h3 = st.columns([6, 2, 2])
 with col_h2:
     if st.button("⚙️ Cài đặt Email Nhắc Hạn", use_container_width=True):
@@ -100,10 +99,9 @@ with col_h3:
 
 st.write("")
 
-# ==================== GIAO DIỆN 1: DASHBOARD CHÍNH ====================
+# ==================== DASHBOARD CHÍNH ====================
 if st.session_state["current_view"] == "dashboard":
     
-    # 4 THẺ THỐNG KÊ (KPI CARDS)
     col_k1, col_k2, col_k3, col_k4 = st.columns(4)
     with col_k1:
         st.markdown(f"""
@@ -141,7 +139,6 @@ if st.session_state["current_view"] == "dashboard":
     st.write("")
     st.divider()
 
-    # THANH TÌM KIẾM & BỘ LỌC NÂNG CAO
     col_f1, col_f2, col_f3, col_f4 = st.columns([3, 2, 2, 2])
     with col_f1:
         search_kw = st.text_input("Tìm kiếm", placeholder="🔍 Tìm theo số hiệu, trích yếu nội dung...")
@@ -155,92 +152,87 @@ if st.session_state["current_view"] == "dashboard":
     st.write("")
     st.subheader("📋 Danh sách Quản lý Văn bản Pháp luật")
 
-    # Xử lý lọc dữ liệu
     filtered_docs = st.session_state["documents"]
     if search_kw:
-        filtered_docs = [d for d in filtered_docs if search_kw.lower() in d["so_hieu"].lower() or search_kw.lower() in d["trich_yeu"].lower()]
+        filtered_docs = [d for d in filtered_docs if search_kw.lower() in d.get("so_hieu","").lower() or search_kw.lower() in d.get("trich_yeu","").lower()]
     if filter_coquan != "Tất cả cơ quan":
-        filtered_docs = [d for d in filtered_docs if d["co_quan"] == filter_coquan]
+        filtered_docs = [d for d in filtered_docs if d.get("co_quan") == filter_coquan]
     if filter_loai != "Tất cả loại văn bản":
-        filtered_docs = [d for d in filtered_docs if d["loai"] == filter_loai]
+        filtered_docs = [d for d in filtered_docs if d.get("loai") == filter_loai]
 
-    # HIỂN THỊ DẠNG BẢNG QUẢN LÝ CHUYÊN NGHIỆP
     for doc in filtered_docs:
         with st.container(border=True):
             cols = st.columns([1.5, 3.5, 2, 1.5, 1.5, 1])
             
             with cols[0]:
-                st.markdown(f"**{doc['loai']}**")
-                st.code(doc['so_hieu'], language=None)
+                st.markdown(f"**{doc.get('loai', 'Văn bản')}**")
+                st.code(doc.get('so_hieu', '---'), language=None)
             with cols[1]:
-                st.markdown(f"**{doc['trich_yeu']}**")
-                st.caption(f"Hiệu lực: {doc['hieu_luc']}")
+                st.markdown(f"**{doc.get('trich_yeu', '')}**")
+                st.caption(f"Hiệu lực: {doc.get('hieu_luc', 'Chưa cập nhật')}")
             with cols[2]:
-                st.markdown(f"🏛️ {doc['co_quan']}")
-                st.caption(f"Ban hành: {doc['ngay_ban_hanh']}")
+                st.markdown(f"🏛️ {doc.get('co_quan', '---')}")
+                st.caption(f"Ban hành: {doc.get('ngay_ban_hanh', '---')}")
             with cols[3]:
-                st.markdown(f"⏰ **{doc['han_hoan_thanh']}**")
+                st.markdown(f"⏰ **{doc.get('han_hoan_thanh', '---')}**")
                 st.caption("Deadline xử lý")
             with cols[4]:
-                if doc['trang_thai_lien_ket'] == "Đủ liên kết":
-                    st.success(f"✅ {doc['trang_thai_lien_ket']}")
+                status_lk = doc.get('trang_thai_lien_ket', 'Đủ liên kết')
+                if "Đủ" in status_lk or "Đã" in status_lk:
+                    st.success(f"✅ {status_lk}")
                 else:
-                    st.warning(f"⚠️ {doc['trang_thai_lien_ket']}")
+                    st.warning(f"⚠️ {status_lk}")
             with cols[5]:
                 st.write("")
-                # Nút xem chi tiết
-                if st.button("👁️", key=f"view_{doc['id']}", help="Xem chi tiết văn bản"):
-                    st.session_state["selected_doc_id"] = doc['id']
+                if st.button("👁️", key=f"view_{doc.get('id', '1')}", help="Xem chi tiết văn bản"):
+                    st.session_state["selected_doc_id"] = doc.get('id', 'DOC-01')
                     st.session_state["current_view"] = "detail"
                     st.rerun()
 
-# ==================== GIAO DIỆN 2: CHI TIẾT & ĐỌC VĂN BẢN ====================
+# ==================== CHI TIẾT & ĐỌC VĂN BẢN ====================
 elif st.session_state["current_view"] == "detail":
     if st.button("⬅️ Quay lại danh sách quản lý"):
         st.session_state["current_view"] = "dashboard"
         st.rerun()
 
-    doc = next((d for d in st.session_state["documents"] if d["id"] == st.session_state["selected_doc_id"]), st.session_state["documents"][0])
+    doc = next((d for d in st.session_state["documents"] if d.get("id") == st.session_state["selected_doc_id"]), st.session_state["documents"][0])
 
-    st.markdown(f"## 📖 {doc['trich_yeu']}")
-    st.info(f"**Số hiệu:** {doc['so_hieu']} | **Loại:** {doc['loai']} | **Cơ quan:** {doc['co_quan']} | **Ngày ban hành:** {doc['ngay_ban_hanh']} | **Hạn xử lý:** {doc['han_hoan_thanh']}")
+    st.markdown(f"## 📖 {doc.get('trich_yeu', '')}")
+    st.info(f"**Số hiệu:** {doc.get('so_hieu')} | **Loại:** {doc.get('loai')} | **Cơ quan:** {doc.get('co_quan')} | **Ngày ban hành:** {doc.get('ngay_ban_hanh')} | **Hạn xử lý:** {doc.get('han_hoan_thanh')}")
 
-    # Khung đọc nội dung văn bản
     with st.container(border=True):
         st.markdown("### Nội dung văn bản chi tiết")
-        st.write(doc["noi_dung"])
+        st.write(doc.get("noi_dung", ""))
 
-    # Phần văn bản dẫn chiếu đặt ở cuối
     st.divider()
     st.markdown("### 🔗 Các văn bản dẫn chiếu & liên kết")
-    for idx, ref in enumerate(doc["dan_chieu"]):
+    for idx, ref in enumerate(doc.get("dan_chieu", [])):
         rc1, rc2, rc3 = st.columns([3, 1, 1])
         with rc1:
-            st.write(f"- {ref['ten']}")
+            st.write(f"- {ref.get('ten', '')}")
         with rc2:
-            if "Đã" in ref["trang_thai"]:
-                st.success(ref["trang_thai"])
+            if "Đã" in ref.get("trang_thai", ""):
+                st.success(ref.get("trang_thai"))
             else:
-                st.error(ref["trang_thai"])
+                st.error(ref.get("trang_thai"))
         with rc3:
-            if "Thiếu" in ref["trang_thai"]:
-                if st.button("Đính kèm", key=f"att_{doc['id']}_{idx}"):
+            if "Thiếu" in ref.get("trang_thai", ""):
+                if st.button("Đính kèm", key=f"att_{doc.get('id')}_{idx}"):
                     ref["trang_thai"] = "Đã liên kết"
                     doc["trang_thai_lien_ket"] = "Đủ liên kết"
                     st.success("Đã đính kèm thành công!")
                     st.rerun()
 
-    # Trợ lý AI Gemini hỏi đáp nhanh
     st.divider()
     st.subheader("🤖 Trợ lý AI Gemini - Hỏi đáp văn bản này")
     ai_q = st.text_input("Nhập câu hỏi của bạn cho Gemini:", placeholder="VD: Tóm tắt các điểm chính của văn bản này...")
     if st.button("Gửi câu hỏi"):
         if ai_q:
-            st.success(f"**Gemini AI:** Dựa trên nội dung văn bản {doc['so_hieu']}, {doc['trich_yeu']}, các quy định yêu cầu thực hiện đầy đủ theo điều khoản đã được số hóa.")
+            st.success(f"**Gemini AI:** Dựa trên nội dung văn bản {doc.get('so_hieu')}, {doc.get('trich_yeu')}, các quy định yêu cầu thực hiện đầy đủ theo điều khoản đã được số hóa.")
         else:
             st.warning("Vui lòng nhập câu hỏi.")
 
-# ==================== GIAO DIỆN 3: QUÉT VĂN BẢN MỚI ====================
+# ==================== QUÉT VĂN BẢN MỚI ====================
 elif st.session_state["current_view"] == "scan":
     if st.button("⬅️ Quay lại danh sách quản lý"):
         st.session_state["current_view"] = "dashboard"
@@ -285,7 +277,7 @@ elif st.session_state["current_view"] == "scan":
         else:
             st.warning("Vui lòng tải file lên và điền đầy đủ Số hiệu văn bản.")
 
-# ==================== GIAO DIỆN 4: CÀI ĐẶT EMAIL NHẮC HẠN ====================
+# ==================== CÀI ĐẶT EMAIL NHẮC HẠN ====================
 elif st.session_state["current_view"] == "settings":
     if st.button("⬅️ Quay lại danh sách quản lý"):
         st.session_state["current_view"] = "dashboard"
