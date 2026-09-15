@@ -235,7 +235,7 @@ elif menu == "⏰ Quản lý Nhắc việc & Hạn":
     df_task = pd.DataFrame(table_data)
     st.dataframe(df_task, use_container_width=True)
     
-    st.info(Hệ thống đang kích hoạt tính năng gửi email cảnh báo tự động về địa chỉ: **{user_email}** khi văn bản đến hạn xử lý.)
+    st.info(f"Hệ thống đang kích hoạt tính năng gửi email cảnh báo tự động về địa chỉ: **{user_email}** khi văn bản đến hạn xử lý.")
 
 # Hàm phụ trợ giả lập câu trả lời AI đơn giản
 def current_q_response(question, doc):
